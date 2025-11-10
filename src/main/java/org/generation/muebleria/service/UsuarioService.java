@@ -21,7 +21,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
-@AllArgsConstructor // <-- Igual que en tu imagen, para la inyección de dependencias
+@AllArgsConstructor
 public class UsuarioService implements IUsuariosService, UserDetailsService {
 
     private final UsuariosRepository usuarioRepository;
