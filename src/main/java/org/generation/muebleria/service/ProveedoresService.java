@@ -1,7 +1,9 @@
 package org.generation.muebleria.service;
 
 import lombok.AllArgsConstructor;
-import org.generation.muebleria.dto.ProveedorRequest;
+import org.generation.muebleria.dto.request.ProveedorRequest;
+import org.generation.muebleria.dto.response.ProveedorResponse;
+import org.generation.muebleria.model.Productos;
 import org.generation.muebleria.model.Proveedores;
 import org.generation.muebleria.repository.ProveedoresRepository;
 import org.generation.muebleria.service.interfaces.IProveedoresService;
@@ -9,6 +11,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
@@ -16,89 +19,33 @@ public class ProveedoresService implements IProveedoresService {
 
     private final ProveedoresRepository proveedoresRepository;
 
-//    @Override
-//    public Proveedores crearProveedor(Proveedores proveedor) {
-//        proveedor.setFechaRegistro(LocalDateTime.now());
-//        proveedor.setFechaActualizacion(LocalDateTime.now());
-//
-//        // Si no se especifica, activar por defecto
-//        if (proveedor.getAcivo() == null) {
-//            proveedor.setAcivo(true);
-//        }
-//
-//        return proveedoresRepository.save(proveedor);
-//    }
-//
-//    @Override
-//    public List<Proveedores> obtenerProveedoresActivos() {
-//        return proveedoresRepository.findByAcivoTrue();
-//    }
-//
-//    @Override
-//    public List<Proveedores> obtenerTodosProveedores() {
-//        return proveedoresRepository.findAll();
-//    }
-//
-//    @Override
-//    public Proveedores obtenerProveedorPorId(Long id) {
-//        return proveedoresRepository.findById(id)
-//                .orElseThrow(() -> new IllegalArgumentException("No existe el proveedor con id: " + id));
-//    }
-//
-//    @Override
-//    public Proveedores actualizarProveedor(Long id, Proveedores proveedorActualizado) {
-//        Proveedores proveedorExistente = proveedoresRepository.findById(id)
-//                .orElseThrow(() -> new IllegalArgumentException("No existe el proveedor con id: " + id));
-//
-//        // Actualizar solo los campos que vienen en el request
-//        if (proveedorActualizado.getNombreEmpresa() != null) {
-//            proveedorExistente.setNombreEmpresa(proveedorActualizado.getNombreEmpresa());
-//        }
-//        if (proveedorActualizado.getNombre() != null) {
-//            proveedorExistente.setNombre(proveedorActualizado.getNombre());
-//        }
-//        if (proveedorActualizado.getTelefono() != null) {
-//            proveedorExistente.setTelefono(proveedorActualizado.getTelefono());
-//        }
-//        if (proveedorActualizado.getCorreo() != null) {
-//            proveedorExistente.setCorreo(proveedorActualizado.getCorreo());
-//        }
-//        if (proveedorActualizado.getDireccion() != null) {
-//            proveedorExistente.setDireccion(proveedorActualizado.getDireccion());
-//        }
-//        if (proveedorActualizado.getAcivo() != null) {
-//            proveedorExistente.setAcivo(proveedorActualizado.getAcivo());
-//        }
-//
-//        // Actualizar fecha de modificación
-//        proveedorExistente.setFechaActualizacion(LocalDateTime.now());
-//
-//        return proveedoresRepository.save(proveedorExistente);
-//    }
-//
-//    @Override
-//    public Proveedores desactivarProveedor(Long id) {
-//        Proveedores proveedor = proveedoresRepository.findById(id)
-//                .orElseThrow(() -> new IllegalArgumentException("No existe el proveedor con id: " + id));
-//
-//        proveedor.setAcivo(false);
-//        proveedor.setFechaActualizacion(LocalDateTime.now());
-//
-//        return proveedoresRepository.save(proveedor);
-//    }
-
     @Override
-    public List<Proveedores> getProveedoresActivos() {
-        return proveedoresRepository.findByActivoTrue();
+    public List<ProveedorResponse> getProveedoresActivos() {
+        List<Proveedores> proveedoresActivos = proveedoresRepository.findByActivoTrue();
+
+        return proveedoresActivos.stream()
+                .map(this::mapToResponseDTO)
+                .collect(Collectors.toList());
     }
 
     @Override
-    public Optional<Proveedores> getProveedorById(Long id) {
-        return proveedoresRepository.findById(id);
+    public Optional<ProveedorResponse> getProveedorById(Long id) {
+        Optional<Proveedores> proveedoresId = Optional.ofNullable(proveedoresRepository.findById(id).orElseThrow(
+                () -> new IllegalArgumentException("El proveedor con el id: " + id + " no existe")
+        ));
+        return proveedoresId.map(this::mapToResponseDTO);
     }
 
     @Override
-    public Proveedores addProveedor(ProveedorRequest proveedor) {
+    public List<ProveedorResponse> getAllProveedores() {
+        List<Proveedores> proveedores = proveedoresRepository.findAll();
+        return proveedores.stream()
+                .map(this::mapToResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public ProveedorResponse addProveedor(ProveedorRequest proveedor) {
         if(proveedoresRepository.findByNombreEmpresa(proveedor.getNombreEmpresa()).isPresent()){
             throw new IllegalArgumentException("Ya existe un proveedor con esa empresa.");
         }
@@ -110,11 +57,13 @@ public class ProveedoresService implements IProveedoresService {
         nuevoProveedor.setCorreo(proveedor.getCorreo());
         nuevoProveedor.setDireccion(proveedor.getDireccion());
 
-        return proveedoresRepository.save(nuevoProveedor);
+        Proveedores saveProveedor = proveedoresRepository.save(nuevoProveedor);
+
+        return mapToResponseDTO(saveProveedor);
     }
 
     @Override
-    public Proveedores updateProveedor(Long id, ProveedorRequest proveedor) {
+    public ProveedorResponse updateProveedor(Long id, ProveedorRequest proveedor) {
         Proveedores proveedorDB = proveedoresRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Proveedor no encontrado."));
 
@@ -125,17 +74,27 @@ public class ProveedoresService implements IProveedoresService {
         if (proveedor.getDireccion() != null) proveedorDB.setDireccion(proveedor.getDireccion());
         if (proveedor.getActivo() != null) proveedorDB.setActivo(proveedor.getActivo());
 
-        proveedorDB.setFechaActualizacion(LocalDateTime.now());
-        return proveedoresRepository.save(proveedorDB);
+        Proveedores saveProveedor = proveedoresRepository.save(proveedorDB);
+
+        return mapToResponseDTO(saveProveedor);
     }
 
     @Override
     public void desactivarProveedorById(Long id) {
         Proveedores proveedor = proveedoresRepository.findById(id).orElseThrow(
-                () -> new IllegalArgumentException("Proveedor no encontrado con ID: " + id));
+                () -> new IllegalArgumentException("Proveedor no encontrado con ID: " + id)
+        );
         if (proveedor.getActivo()) {
             proveedor.setActivo(false);
+            for(Productos producto: proveedor.getProductos()){
+                if(producto.getActivo()){
+                    producto.setActivo(false);
+                    producto.setActivo_por_dependencia(true);
+                }
+            }
             proveedoresRepository.save(proveedor);
+        }else{
+            throw new IllegalArgumentException("El proveedor ya esta desactivado");
         }
     }
 
@@ -145,8 +104,36 @@ public class ProveedoresService implements IProveedoresService {
                 () -> new IllegalArgumentException("Proveedor no encontrado con ID: " + id));
         if (!proveedor.getActivo()) {
             proveedor.setActivo(true);
+            for(Productos producto: proveedor.getProductos()){
+                if(!producto.getActivo() && producto.getActivo_por_dependencia()){
+                    boolean categoriaActivo = producto.getCategoria().getActivo();
+                    if(categoriaActivo){
+                        producto.setActivo(true);
+                        producto.setActivo_por_dependencia(false);
+                    }
+                }
+            }
             proveedoresRepository.save(proveedor);
+        }else{
+            throw new IllegalArgumentException("El proveedor ya esta activo");
         }
     }
 
+    @Override
+    public ProveedorResponse mapToResponseDTO(Proveedores proveedor) {
+        ProveedorResponse dto = new ProveedorResponse();
+
+        dto.setIdProveedor(proveedor.getIdProveedor());
+        dto.setNombreEmpresa(proveedor.getNombreEmpresa());
+        dto.setNombre(proveedor.getNombre());
+        dto.setTelefono(proveedor.getTelefono());
+        dto.setCorreo(proveedor.getCorreo());
+        dto.setDireccion(proveedor.getDireccion());
+        dto.setActivo(proveedor.getActivo());
+
+        dto.setFechaRegistro(proveedor.getFechaRegistro());
+        dto.setFechaActualizacion(proveedor.getFechaActualizacion());
+
+        return dto;
+    }
 }

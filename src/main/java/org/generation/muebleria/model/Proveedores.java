@@ -1,10 +1,14 @@
 package org.generation.muebleria.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -31,14 +35,17 @@ public class Proveedores {
     private String direccion;
     @Column(name = "activo", columnDefinition = "TINYINT(1)")
     private Boolean activo = true;
-    @Column(name = "fecha_registro", insertable = false, updatable = false)
+    @Column(name = "fecha_registro")
+    @CreationTimestamp //hibernate crea la fecha una sola vez
     private LocalDateTime fechaRegistro;
-    @Column(name = "fecha_actualizacion", columnDefinition = "DATETIME DEFAULT CURRENT_TIMESTAMP")
-    private LocalDateTime fechaActualizacion = LocalDateTime.now();
+    @Column(name = "fecha_actualizacion", nullable = false)
+    @UpdateTimestamp //hibernate actualiza la fecha cada update/add
+    private LocalDateTime fechaActualizacion;
 
     //Relacion uno -> mucho (Productos)
     //(Productos) -> se definio [proveedor] para el mappedBy
     @OneToMany(mappedBy = "proveedor", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonBackReference
     private List<Productos> productos;
 
 }

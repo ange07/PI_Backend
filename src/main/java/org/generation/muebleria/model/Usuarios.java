@@ -6,6 +6,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -35,14 +37,17 @@ public class Usuarios {
     private String correo;
     @Column(name = "activo", columnDefinition = "TINYINT(1)")
     private Boolean activo = true;
-    @Column(name = "fecha_registro", insertable = false, updatable = false)
+    @Column(name = "fecha_registro")
+    @CreationTimestamp //hibernate crea la fecha una sola vez
     private LocalDateTime fechaRegistro;
-    @Column(name = "fecha_actualizacion", nullable = false, columnDefinition = "DATETIME DEFAULT CURRENT_TIMESTAMP")
-    private LocalDateTime fechaActualizacion = LocalDateTime.now();
+    @Column(name = "fecha_actualizacion", nullable = false)
+    @UpdateTimestamp //hibernate actualiza la fecha cada update/add
+    private LocalDateTime fechaActualizacion;
 
     //Relacion: muchos -> uno (Roles)
     @ManyToOne
     @JoinColumn(name = "id_rol", nullable = false)
+    @JsonBackReference
     private Roles rol;
 
     //Relacion: uno -> muchos (Resenas)

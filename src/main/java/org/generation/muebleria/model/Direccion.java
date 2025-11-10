@@ -21,6 +21,7 @@ public class Direccion {
     @Column(name = "id_direccion")
     private Long idDireccion;
     @Column(name = "tipo_direccion", nullable = false)
+    @Enumerated(EnumType.STRING)
     private TipoDireccion tipoDireccion;
     @Column(name = "alias", nullable = false, length = 150)
     private String alias;
@@ -40,6 +41,7 @@ public class Direccion {
     //Relacion: muchos -> uno (Usuario)
     @ManyToOne
     @JoinColumn(name="id_usuario", nullable = false)
+    @JsonBackReference
     private Usuarios usuario;
 
     //Relacion: uno -> muchos (Pedidos)
@@ -47,10 +49,11 @@ public class Direccion {
     @OneToMany(mappedBy = "direccion", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonBackReference
     private List<Pedidos> pedidos;
+
+    public enum TipoDireccion {
+        ENVIO,
+        FACTURACION,
+        ENVIO_Y_FACTURACION
+    }
 }
 
-enum TipoDireccion {
-    ENVIO,
-    FACTURACION,
-    ENVIO_Y_FACTURACION
-}

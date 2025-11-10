@@ -11,11 +11,4 @@ public interface CategoriaRepository extends JpaRepository<Categorias, Long> {
     //Métodopara listar solo categorías activas
     List<Categorias> findByActivoTrue();
     Optional<Categorias> findByNombreCategoria(String nombreCategoria);
-
-    // Métodoutil para buscar subcategorías (hijas) de una categoría padre
-    List<Categorias> findByCategoriaPadreIdCategoriaAndActivoTrue(Long idCategoriaPadre);
-
-    // Métodoutil para buscar categorías principales (las que no tienen padre)
-    List<Categorias> findByCategoriaPadreIsNullAndActivoTrue();
-
 }

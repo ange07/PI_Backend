@@ -1,11 +1,13 @@
 package org.generation.muebleria.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -36,15 +38,14 @@ public class Facturas {
     private BigDecimal iva;
     @Column(name = "total", nullable = false)
     private BigDecimal total;
-    // Mapea la columna fecha_emision que tiene un valor por defecto en la BD.
-    // No la actualizamos ni la insertamos desde Java, dejamos que la BD maneje el default.
-    @Column(name = "fecha_emision", insertable = false, updatable = false)
+    @Column(name = "fecha_emision")
+    @CreationTimestamp //hibernate crea la fecha una sola vez
     private LocalDateTime fechaEmision;
 
 
     // Relacion: uno -> uno (Pedidos)
     @OneToOne
     @JoinColumn(name = "id_pedido")
-    @JsonIgnore
+    @JsonBackReference
     private Pedidos pedido;
 }

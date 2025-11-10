@@ -8,6 +8,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -32,15 +34,17 @@ public class Pedidos {
     private BigDecimal costoEnvio;
     @Column(name = "numero_guia", nullable = false, length = 150)
     private String numeroGuia;
-    @Column(name = "fecha_pedido", insertable = false, updatable = false)
+    @Column(name = "fecha_pedido")
+    @CreationTimestamp //hibernate crea la fecha una sola vez
     private LocalDateTime fechaPedido;
-    @Column(name = "fecha_actualizacion", nullable = false, columnDefinition = "DATETIME DEFAULT CURRENT_TIMESTAMP")
+    @Column(name = "fecha_actualizacion", nullable = false)
+    @UpdateTimestamp //hibernate actualiza la fecha cada update/add
     private LocalDateTime fechaActualizacion;
 
     //Relacion: uno -> uno (facturas)
     @OneToOne
     @JoinColumn(name = "id_factura")
-    @JsonIgnore
+    @JsonBackReference
     private Facturas factura;
 
     //Relacion uno -> muchos (Resenas)
@@ -58,11 +62,13 @@ public class Pedidos {
     //Relacion: muchos -> uno (Usuarios)
     @ManyToOne
     @JoinColumn(name = "id_usuario", nullable = false)
+    @JsonBackReference
     private Usuarios usuario;
 
     //Relacion: muchos -> uno (Direccion)
     @ManyToOne
     @JoinColumn(name = "id_direccion", nullable = false)
+    @JsonBackReference
     private Direccion direccion;
 }
 

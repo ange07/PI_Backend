@@ -1,4 +1,4 @@
-package org.generation.muebleria.dto;
+package org.generation.muebleria.dto.request;
 
 import lombok.Getter;
 import lombok.Setter;

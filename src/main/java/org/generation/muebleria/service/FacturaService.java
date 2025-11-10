@@ -1,15 +1,18 @@
 package org.generation.muebleria.service;
 
 import lombok.AllArgsConstructor;
-import org.generation.muebleria.dto.FacturaRequest;
+import org.generation.muebleria.dto.request.FacturaRequest;
+import org.generation.muebleria.dto.response.FacturaResponse;
 import org.generation.muebleria.model.Facturas;
-import org.generation.muebleria.model.Pedidos; // Necesitamos el modelo de Pedidos
+import org.generation.muebleria.model.Pedidos;
 import org.generation.muebleria.repository.FacturasRepository;
 import org.generation.muebleria.repository.PedidosRepository; // Necesitamos el repo de Pedidos
 import org.generation.muebleria.service.interfaces.IFacturaService;
+import org.generation.muebleria.service.interfaces.IPedidosService;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 
 @Service
@@ -17,63 +20,71 @@ import java.util.List;
 public class FacturaService implements IFacturaService {
 
     private final FacturasRepository facturasRepository;
-    private final PedidosRepository pedidosRepository; //  trae la info de pedidos
+    private final PedidosRepository pedidoRepository; //  trae la info de pedidos
+    private final IPedidosService pedidosService;
 
     @Override
-    public Facturas generarFactura(Long idPedido, FacturaRequest request) {
-        /*
-        // 1. Verificar que el pedido exista
-        Pedidos pedido = pedidosRepository.findById(idPedido).orElseThrow(
-                () -> new IllegalArgumentException("El pedido con ID " + idPedido + " no existe.")
-        );
+    public FacturaResponse generarFactura(FacturaRequest request) {
+        Pedidos pedido = pedidoRepository.findById(request.getIdPedido())
+                .orElseThrow(() -> new IllegalArgumentException("Pedido no encontrado."));
 
-        // 2. Verificar que el pedido no tenga ya una factura
-        if (facturasRepository.findByPedido_Id(idPedido).isPresent()) {
-            throw new IllegalStateException("El pedido " + idPedido + " ya ha sido facturado.");
+        //Un pedido solo puede tener una factura.
+        if (pedido.getFactura() != null) {
+            throw new IllegalStateException("El pedido con ID " + pedido.getIdPedido() + " ya ha sido facturado.");
         }
 
-        // 3. Crear la nueva factura
-        Facturas nuevaFactura = new Facturas();
+        //Usar el Total del Pedido
+        BigDecimal total = pedido.getTotal();
+        // Asumiendo un IVA del 16% (Factor: 1 + 0.16 = 1.16)
+        BigDecimal factorIVA = new BigDecimal("1.16");
 
-        // 4. Copiar datos del DTO (lo que dio el cliente)
-        nuevaFactura.setRfc(request.getRfc());
-        nuevaFactura.setRazonSocial(request.getRazonSocial());
+        // Subtotal = Total / 1.16
+        BigDecimal subtotal = total.divide(factorIVA, 2, RoundingMode.HALF_UP);
+        // IVA = Total - Subtotal
+        BigDecimal iva = total.subtract(subtotal);
 
-        // 5. Copiar datos del Pedido (lo que sabemos del sistema)
-        nuevaFactura.setPedido(pedido);
-        nuevaFactura.setTotal(pedido.getTotal()); // Asumiendo que Pedido tiene getTotal()
+        //Crear Entidad
+        Facturas newFactura = new Facturas();
+        newFactura.setPedido(pedido);
+        newFactura.setRfc(request.getRfc());
+        newFactura.setRazonSocial(request.getRazonSocial());
+        newFactura.setSubtotal(subtotal);
+        newFactura.setIva(iva);
+        newFactura.setTotal(total); // El total de la factura es el total del pedido
 
-        // 6. Calcular impuestos (Ejemplo simple de IVA al 16%)
-        // (En un sistema real, el pedido ya traería esto desglosado)
-        BigDecimal subtotal = pedido.getTotal().divide(new BigDecimal("1.16"), 2, BigDecimal.ROUND_HALF_UP);
-        BigDecimal iva = pedido.getTotal().subtract(subtotal);
+        //Guardar y actualizar relación
+        Facturas savedFactura = facturasRepository.save(newFactura);
 
-        nuevaFactura.setSubtotal(subtotal);
-        nuevaFactura.setIva(iva);
+        //Actualizar la referencia bidireccional en el Pedido
+        pedido.setFactura(savedFactura);
+        pedidoRepository.save(pedido);
 
-        // 7. Guardar en la BD
-        return facturasRepository.save(nuevaFactura);*/
-
-        return null;
+        return mapToResponseDTO(savedFactura);
     }
 
     @Override
-    public Facturas getFacturaById(Long idFactura) {
-        return facturasRepository.findById(idFactura).orElseThrow(
-                () -> new IllegalArgumentException("Factura no encontrada")
-        );
+    public FacturaResponse getFacturaById(Long idFactura) {
+        return facturasRepository.findById(idFactura)
+                .map(this::mapToResponseDTO)
+                .orElseThrow(() -> new IllegalArgumentException("Factura no encontrada con ID: " + idFactura));
+
     }
 
     @Override
-    public Facturas getFacturaByPedidoId(Long idPedido) {
-        return null;
-        /*        facturasRepository.findByPedido_Id(idPedido).orElseThrow(
-                () -> new IllegalArgumentException("No se encontró factura para el pedido " + idPedido)
-        );*/
-    }
+    public FacturaResponse mapToResponseDTO(Facturas factura) {
+        if (factura == null) return null;
+        FacturaResponse dto = new FacturaResponse();
+        dto.setIdFactura(factura.getIdFactura());
+        dto.setRfc(factura.getRfc());
+        dto.setRazonSocial(factura.getRazonSocial());
+        dto.setSubtotal(factura.getSubtotal());
+        dto.setIva(factura.getIva());
+        dto.setTotal(factura.getTotal());
+        dto.setFechaEmision(factura.getFechaEmision());
 
-    @Override
-    public List<Facturas> getFacturasByRfc(String rfc) {
-        return facturasRepository.findByRfc(rfc);
+        if (factura.getPedido() != null) {
+            dto.setPedido(pedidosService.mapToLiteDTO(factura.getPedido()));
+        }
+        return dto;
     }
 }

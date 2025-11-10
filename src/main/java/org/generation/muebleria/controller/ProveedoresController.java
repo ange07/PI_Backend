@@ -1,10 +1,10 @@
 package org.generation.muebleria.controller;
 
 import lombok.AllArgsConstructor;
-import org.generation.muebleria.dto.ProveedorRequest;
+import org.generation.muebleria.dto.request.ProveedorRequest;
+import org.generation.muebleria.dto.response.ProveedorResponse;
 import org.generation.muebleria.model.Proveedores;
 import org.generation.muebleria.service.ProveedoresService;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Optional;
@@ -16,63 +16,33 @@ public class ProveedoresController {
 
     private final ProveedoresService proveedoresService;
 
-//    // POST - Crear proveedor
-//    @PostMapping
-//    public Proveedores crearProveedor(@RequestBody Proveedores proveedor) {
-//        return proveedoresService.crearProveedor(proveedor);
-//    }
-//
-//    // GET - Obtener todos los proveedores activos
-//    @GetMapping("/activos")
-//    public List<Proveedores> obtenerProveedoresActivos() {
-//        return proveedoresService.obtenerProveedoresActivos();
-//    }
-//
-//    // GET - Obtener todos los proveedores
-//    @GetMapping
-//    public List<Proveedores> obtenerTodosProveedores() {
-//        return proveedoresService.obtenerTodosProveedores();
-//    }
-//
-//    // GET - Obtener proveedor por ID
-//    @GetMapping("/{id}")
-//    public Proveedores obtenerProveedorPorId(@PathVariable Long id) {
-//        return proveedoresService.obtenerProveedorPorId(id);
-//    }
-//
-//    // PUT - Actualizar proveedor
-//    @PutMapping("/{id}")
-//    public Proveedores actualizarProveedor(@PathVariable Long id, @RequestBody Proveedores proveedor) {
-//        return proveedoresService.actualizarProveedor(id, proveedor);
-//    }
-//
-//    // PATCH - Desactivar proveedor
-//    @PatchMapping("/{id}/desactivar")
-//    public Proveedores desactivarProveedor(@PathVariable Long id) {
-//        return proveedoresService.desactivarProveedor(id);
-//    }
-
-    // GET /api/proveedores
+    // [GET: USUARIO] -> url -> /api/proveedores
     @GetMapping
-    public List<Proveedores> getAllActiveProviders(){
+    public List<ProveedorResponse> getAllActiveProviders(){
         return proveedoresService.getProveedoresActivos();
     }
 
-    // GET /api/proveedores/{id}
+    // [GET: USUARIO] -> url -> /api/proveedores/{id}
     @GetMapping(path = "/{id}")
-    public Optional<Proveedores> getProviderById(@PathVariable("id") Long id){
+    public Optional<ProveedorResponse> getProviderById(@PathVariable("id") Long id){
         return proveedoresService.getProveedorById(id);
     }
 
-    // POST /api/proveedores/admin
+    // [GET: ADMIN] -> url -> /api/proveedores/admin/todos
+    @GetMapping(path = "/admin/todos")
+    public List<ProveedorResponse> getAllProveedores(){
+        return proveedoresService.getAllProveedores();
+    }
+
+    // [POST: ADMIN] -> url -> /api/proveedores/admin/add
     @PostMapping(path = "/admin/add")
-    public Proveedores addProvider(@RequestBody ProveedorRequest proveedor){
+    public ProveedorResponse addProvider(@RequestBody ProveedorRequest proveedor){
         return proveedoresService.addProveedor(proveedor);
     }
 
-    // PUT /api/proveedores/admin/{id}
+    // [PUT:ADMIN] -> url -> /api/proveedores/admin/update/{id}
     @PutMapping(path = "/admin/update/{id}")
-    public Proveedores updateProvider(@PathVariable("id") Long id, @RequestBody ProveedorRequest proveedor){
+    public ProveedorResponse updateProvider(@PathVariable("id") Long id, @RequestBody ProveedorRequest proveedor){
         return proveedoresService.updateProveedor(id, proveedor);
     }
 

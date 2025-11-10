@@ -1,5 +1,6 @@
 package org.generation.muebleria.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -28,11 +29,13 @@ public class DetallesPedido {
     //Relacion: muchos -> uno (Productos)
     @ManyToOne
     @JoinColumn(name="id_producto", nullable = false)
+    @JsonBackReference
     private Productos producto;
 
     //Relacion: muchos -> uno (Pedidos)
     @ManyToOne
     @JoinColumn(name="id_pedidos", nullable = false)
+    @JsonBackReference
     private Pedidos pedido;
 
 }

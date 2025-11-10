@@ -13,17 +13,5 @@ import java.util.Optional;
 @Repository
 public interface FacturasRepository extends JpaRepository<Facturas, Long> {
 
-    /**
-     ** Se puede buscar una factura usando el ID del pedido asociado a la factura.
-     * Los tipos de dato del ID son Long
-     */
-    Optional<Facturas> findByPedido_IdPedido(Long idPedido);
-
-    /**
-     * También podríamos querer buscar facturas por RFC.
-     * @param rfc El RFC del cliente.
-     * @return Una lista de facturas asociadas a ese RFC.
-     */
-    List<Facturas> findByRfc(String rfc);
-
+    Optional<Facturas> findByPedidoIdPedido(Long idPedido);
 }

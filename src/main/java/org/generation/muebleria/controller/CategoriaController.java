@@ -1,8 +1,8 @@
 package org.generation.muebleria.controller;
 
 import lombok.AllArgsConstructor;
-import org.generation.muebleria.dto.CategoriaRequest;
-import org.generation.muebleria.model.Categorias;
+import org.generation.muebleria.dto.request.CategoriaRequest;
+import org.generation.muebleria.dto.response.CategoriaResponse;
 import org.generation.muebleria.service.interfaces.ICategoriaService;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,37 +16,43 @@ public class CategoriaController {
 
     private final ICategoriaService categoriaService;
 
-    // url -> /api/categorias
+    // [GET: USUARIO] -> url -> /api/categorias
     @GetMapping
-    public List<Categorias> getAllActiveCategorias(){
+    public List<CategoriaResponse> getAllActiveCategorias(){
         return categoriaService.getAllCategoriasActive();
     }
 
-    // GET /api/categorias/{categoriaId}
+    // [GET: USUARIO] -> url -> /api/categorias/{categoriaId}
     @GetMapping(path = "/{categoriaId}")
-    public Optional<Categorias> getCategoryById(@PathVariable("categoriaId")Long id){
+    public Optional<CategoriaResponse> getCategoryById(@PathVariable("categoriaId")Long id){
         return categoriaService.getCategoriaById(id);
     }
 
-    // url -> /api/categorias/admin
+    // [GET: ADMIN] -> url -> /api/categorias/admin/todos
+    @GetMapping(path = "/admin/todos")
+    public List<CategoriaResponse> getAllCategorias(){
+        return categoriaService.getAllCategorias();
+    }
+
+    // [POST: ADMIN] -> url -> /api/categorias/admin/add
     @PostMapping(path = "/admin/add")
-    public Categorias addCategory(@RequestBody CategoriaRequest categoria){
+    public CategoriaResponse addCategory(@RequestBody CategoriaRequest categoria){
         return categoriaService.addCategoria(categoria);
     }
 
-    // url -> /api/categorias/admin/update/{categoriaId}
+    // [PUT: ADMIN] -> url -> /api/categorias/admin/update/{categoriaId}
     @PutMapping(path = "/admin/update/{categoriaId}")
-    public Categorias updateCategory(@PathVariable("categoriaId")Long id, @RequestBody CategoriaRequest categoria){
+    public CategoriaResponse updateCategory(@PathVariable("categoriaId")Long id, @RequestBody CategoriaRequest categoria){
         return categoriaService.updateCategoriaById(id, categoria);
     }
 
-    // url -> /api/categorias/admin/desactivar/{categoriaId}
+    // [DELTE: ADMIN] -> url -> /api/categorias/admin/desactivar/{categoriaId}
     @DeleteMapping(path = "/admin/desactivar/{categoriaId}")
     public void desactivarCategoria(@PathVariable("categoriaId")Long id){
         categoriaService.desactivarCategoriaById(id);
     }
 
-    // PUT /api/categorias/admin/activar/{categoriaId}
+    // [DELETE: ADMIN] -> url -> /api/categorias/admin/activar/{categoriaId}
     @DeleteMapping(path = "/admin/activar/{categoriaId}")
     public void activarCategoria(@PathVariable("categoriaId") Long id){
         categoriaService.activarCategoriaById(id);

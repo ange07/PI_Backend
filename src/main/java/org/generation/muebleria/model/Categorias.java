@@ -29,6 +29,7 @@ public class Categorias {
     // Relacion:  uno -> muchos (Productos)
     //(Productos) -> se definio [categoria] para el mappedBy
     @OneToMany(mappedBy = "categoria", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonBackReference
     private List<Productos> productos;
 
     //relacion que se apunta a si misma (para categorias anidadas)
@@ -36,6 +37,4 @@ public class Categorias {
     @JoinColumn(name = "id_categoria_padre", nullable = true)
     @JsonBackReference
     private Categorias categoriaPadre;
-
-
 }

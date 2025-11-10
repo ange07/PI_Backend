@@ -7,7 +7,5 @@ import java.util.List;
 
 public interface ImagenesProductoRepository extends JpaRepository<ImagenesProducto, Long> {
 
-    // Método para encontrar todas las imágenes por el ID del producto
     List<ImagenesProducto> findByProductoIdProducto(Long idProducto);
-
 }

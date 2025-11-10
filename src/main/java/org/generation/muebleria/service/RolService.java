@@ -1,6 +1,8 @@
 package org.generation.muebleria.service;
 
 import lombok.AllArgsConstructor;
+import org.generation.muebleria.dto.request.RolRequest;
+import org.generation.muebleria.dto.response.RolResponse;
 import org.generation.muebleria.model.Roles;
 import org.generation.muebleria.repository.RolRepository;
 import org.generation.muebleria.service.interfaces.IRolService;
@@ -8,56 +10,75 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor // Inyecta el repositorio automáticamente
 public class RolService implements IRolService {
 
     // Inyección de dependencia
-    public RolRepository rolRepository;
+    public final RolRepository rolesRepository;
+
 
     @Override
-    public List<Roles> getAllRoles() {
-        return rolRepository.findAll();
+    public RolResponse addRol(RolRequest rolRequest) {
+        if (rolesRepository.findByNombreRol(rolRequest.getNombreRol()).isPresent()) {
+            throw new IllegalArgumentException("El rol '" + rolRequest.getNombreRol() + "' ya existe.");
+        }
+        Roles nuevoRol = new Roles();
+        nuevoRol.setNombreRol(rolRequest.getNombreRol());
+
+        Roles savedRol = rolesRepository.save(nuevoRol);
+        return mapToResponseDTO(savedRol);
     }
 
     @Override
-    public Roles getRolById(Long id) {
-        return rolRepository.findById(id).orElse(null);
+    public List<RolResponse> getAllRoles() {
+        return rolesRepository.findAll().stream()
+                .map(this::mapToResponseDTO)
+                .collect(Collectors.toList());
     }
 
     @Override
-    public Roles getRolByNombre(String nombre) {
-        return rolRepository.findByNombreRol(nombre).orElse(null);
+    public RolResponse getRolById(Long id) {
+        return rolesRepository.findById(id)
+                .map(this::mapToResponseDTO)
+                .orElseThrow(() -> new IllegalArgumentException("Rol no encontrado con ID: " + id));
     }
 
     @Override
-    public Roles createRol(Roles rol) {
-        // Aquí podrías añadir validación para que no se repita el nombre
-        return rolRepository.save(rol);
-    }
+    public RolResponse updateRol(Long id, RolRequest rolRequest) {
+        Roles rolExistente = rolesRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Rol no encontrado con ID: " + id));
 
-    @Override
-    public Roles updateRolById(Long id, Roles rolActualizado) {
-        // 1. Buscamos el rol
-        Optional<Roles> rolExistente = rolRepository.findById(id);
-
-        // 2. Si no existe, devolvemos null
-        if (rolExistente.isEmpty()) {
-            return null;
+        // Validación de unicidad si el nombre cambia
+        if (!rolExistente.getNombreRol().equals(rolRequest.getNombreRol())) {
+            if (rolesRepository.findByNombreRol(rolRequest.getNombreRol()).isPresent()) {
+                throw new IllegalArgumentException("El nuevo nombre de rol ya existe.");
+            }
+            rolExistente.setNombreRol(rolRequest.getNombreRol());
         }
 
-        // 3. Actualizamos el nombre y guardamos
-        Roles rolDb = rolExistente.get();
-        rolDb.setNombreRol(rolActualizado.getNombreRol());
-
-        return rolRepository.save(rolDb);
+        Roles updatedRol = rolesRepository.save(rolExistente);
+        return mapToResponseDTO(updatedRol);
     }
 
     @Override
-    public void deleteRolById(Long id) {
-        // A diferencia de Categorias, Roles no tiene 'activo',
-        // así que aplicamos un borrado físico (Hard Delete).
-        rolRepository.deleteById(id);
+    public void deleteRol(Long id) {
+        if (!rolesRepository.existsById(id)) {
+            throw new IllegalArgumentException("Rol no encontrado con ID: " + id);
+        }
+        //La eliminación en cascada borrará los usuarios asociados si no se reasignan.
+        rolesRepository.deleteById(id);
+    }
+
+    public RolResponse mapToResponseDTO(Roles rol) {
+        if (rol == null) return null;
+
+        RolResponse dto = new RolResponse();
+        dto.setIdRol(rol.getIdRol());
+        dto.setNombreRol(rol.getNombreRol());
+
+        return dto;
     }
 }

@@ -1,26 +1,17 @@
 package org.generation.muebleria.service.interfaces;
 
+import org.generation.muebleria.dto.request.RolRequest;
+import org.generation.muebleria.dto.response.RolResponse;
 import org.generation.muebleria.model.Roles;
 import java.util.List;
 
 public interface IRolService {
 
-    // Obtener todos los roles
-    List<Roles> getAllRoles();
+    RolResponse addRol(RolRequest rolRequest);
+    List<RolResponse> getAllRoles();
+    RolResponse getRolById(Long id);
+    RolResponse updateRol(Long id, RolRequest rolRequest);
+    void deleteRol(Long id);
 
-    // Obtener un rol por ID
-    Roles getRolById(Long id);
-
-    // Obtener un rol por Nombre
-    Roles getRolByNombre(String nombre);
-
-    // Crear un nuevo rol
-    Roles createRol(Roles rol);
-
-    // Actualizar un rol
-    Roles updateRolById(Long id, Roles rolActualizado);
-
-    // Borrar un rol (Hard Delete)
-    void deleteRolById(Long id);
-
+    RolResponse mapToResponseDTO(Roles rol);
 }
